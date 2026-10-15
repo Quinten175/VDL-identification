@@ -1,20 +1,19 @@
 import os
 import tkinter as tk
-from tkinter import filedialog
+from .gui_drawer import GUIDrawer
 
-
-class GUI:
+class GUI(GUIDrawer):
     def __init__(self):
         self.app = tk.Tk()
+        super().__init__(self.app)
         self.app.title("Synthetic data generation")
 
         self.app.geometry("1000x500")
         self.app.resizable(width=False, height=False)
 
-        self.tooltips = {}
-
         self.center_window()
 
+        # file browser
         cad_types = [
             ("CAD files", "*.step *.stp *.iges *.igs *.stl"),
             ("All files", "*.*")
@@ -22,11 +21,33 @@ class GUI:
         self.cad_path = None
         self.browse_file(cad_types, "cad_path", "CAD File Selection")
 
+        # config browser
         config_types = [
             ("CFG files", "*.cfg"),
         ]
         self.config_path = os.path.abspath("../config/default.cfg")
         self.browse_file(config_types, "config_path", "Config File Selection")
+
+        # environment browser
+        env_types = [
+            ("Environment files", "*.hdr, *.exr"),
+        ]
+        self.env_path = None
+        self.browse_file(env_types, "env_path", "Environment Selection")
+
+        # button frame
+        bottom_frame = tk.Frame(self.app)
+        bottom_frame.pack(side=tk.BOTTOM, fill=tk.X, padx=10, pady=10)
+        self.start_button = tk.Button(
+            bottom_frame,
+            text="Start pipeline",
+            command=self.start_task,
+            font=("Arial", 14, "bold"),
+            padx=20,
+            pady=10
+        )
+        self.start_button.pack(side=tk.RIGHT, padx=(0, 10))
+        self.validate_able_start()
 
         self.app.mainloop()
 
@@ -41,118 +62,21 @@ class GUI:
 
         self.app.geometry(f"{width}x{height}+{x}+{y}")
 
-    @staticmethod
-    def truncate_path(path, max_length=45):
-        if len(path) <= max_length:
-            return path
-        return "..." + path[-(max_length - 3):]
+    def validate_able_start(self):
+        is_valid = tk.NORMAL
 
-    @staticmethod
-    def create_tooltip(widget, text):
-        tooltip = tk.Toplevel(widget)
-        tooltip.withdraw()
-        tooltip.overrideredirect(True)
+        if self.cad_path is None:
+            is_valid = tk.DISABLED
 
-        label = tk.Label(
-            tooltip,
-            text=text,
-            background="#ffffe0",
-            relief="solid",
-            borderwidth=1,
-            padx=5,
-            pady=3
-        )
-        label.pack()
+        if self.config_path is None:
+            is_valid = tk.DISABLED
 
-        def show(event):
-            tooltip.geometry(f"+{event.x_root + 10}+{event.y_root + 10}")
-            tooltip.deiconify()
+        if self.env_path is None:
+            is_valid = tk.DISABLED
 
-        def hide():
-            tooltip.withdraw()
+        self.start_button.config(state=is_valid)
 
-        widget.bind("<Enter>", show)
-        widget.bind("<Leave>", hide)
+        self.app.after(200, self.validate_able_start)
 
-        return tooltip
-
-    def set_tooltip(self, widget, text):
-        widget_id = str(widget)
-
-        if widget_id in self.tooltips:
-            self.tooltips[widget_id].destroy()
-
-        self.tooltips[widget_id] = self.create_tooltip(widget, text)
-
-    def input_group(self, title, width_percent=100, height_percent=10):
-        self.app.update_idletasks()
-
-        app_width = self.app.winfo_width()
-        app_height = self.app.winfo_height()
-
-        width = int(app_width * width_percent / 100)
-        height = int(app_height * height_percent / 100) if height_percent is not None else None
-
-        group = tk.LabelFrame(self.app, text=title, padx=10, pady=10)
-
-        if height is None:
-            group.configure(width=width)
-            group.pack(anchor="nw", fill="x", padx=10, pady=10)
-            group.pack_propagate(False)
-        else:
-            group.configure(width=width, height=height)
-            group.pack(anchor="nw", padx=10, pady=10)
-            group.pack_propagate(False)
-
-        return group
-
-    def browse_file(self, types, var_name, title):
-        group = self.input_group(title, width_percent=50, height_percent=15)
-
-        frame = tk.Frame(group)
-        frame.pack(anchor="w", fill="x")
-
-        current_path = str(getattr(self, var_name, None))
-        initial_text = self.truncate_path(current_path) if current_path else "No file selected"
-
-        path_label = tk.Label(frame, text=initial_text, width=40, anchor="w")
-        path_label.pack(side=tk.LEFT, padx=(0, 10))
-
-        if current_path:
-            self.set_tooltip(path_label, current_path)
-
-        browse_button = tk.Button(
-            frame,
-            text="Browse files",
-            command=lambda: self.select_file(path_label, types, var_name)
-        )
-        browse_button.pack(side=tk.RIGHT, padx=(0, 10))
-
-    def select_file(self, label, types, var_name):
-        current_path = str(getattr(self, var_name, None))
-
-        options = {
-            "parent": self.app,
-            "title": "Select a file",
-            "filetypes": types
-        }
-
-        if current_path:
-            if os.path.isfile(current_path):
-                options["initialdir"] = os.path.dirname(current_path)
-                options["initialfile"] = os.path.basename(current_path)
-            elif os.path.isdir(current_path):
-                options["initialdir"] = current_path
-
-        file_path = filedialog.askopenfilename(**options)
-
-        if file_path:
-            setattr(self, var_name, file_path)
-            label.config(text=self.truncate_path(file_path))
-            self.set_tooltip(label, file_path)
-
-        return file_path
-
-
-if __name__ == "__main__":
-    GUI()
+    def start_task(self):
+        pass
