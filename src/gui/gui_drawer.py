@@ -34,7 +34,7 @@ class GUIDrawer:
             tooltip.geometry(f"+{event.x_root + 10}+{event.y_root + 10}")
             tooltip.deiconify()
 
-        def hide():
+        def hide(_event):
             tooltip.withdraw()
 
         widget.bind("<Enter>", show)
@@ -118,7 +118,6 @@ class GUIDrawer:
             self.tooltips[widget_id].destroy()
 
         self.tooltips[widget_id] = self.create_tooltip(widget, text)
-
 
 
 

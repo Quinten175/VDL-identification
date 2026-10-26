@@ -1,3 +1,4 @@
+import logging
 import os
 import signal
 import sys
@@ -47,9 +48,6 @@ def request_stop(icon, item):
 def main():
     signal.signal(signal.SIGTERM, lambda signum, frame: (STOP_EVENT.set(), sys.exit(0)))
 
-    pipeline_thread = threading.Thread(target=run_pipeline_loop, daemon=True)
-    pipeline_thread.start()
-
     icon = Icon(
         name="pipeline_tray",
         icon=create_tray_image(),
@@ -58,6 +56,18 @@ def main():
             MenuItem("Stop pipeline", request_stop),
         ),
     )
+
+    get_systray_manager = getattr(icon, "_get_systray_manager", None)
+    if get_systray_manager is not None and get_systray_manager() is None:
+        logging.warning(
+            "No system tray manager is available; running the pipeline without tray controls."
+        )
+        del icon
+        run_pipeline_loop()
+        return
+
+    pipeline_thread = threading.Thread(target=run_pipeline_loop, daemon=True)
+    pipeline_thread.start()
     icon.run()
 
 

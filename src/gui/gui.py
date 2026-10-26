@@ -11,8 +11,6 @@ PIPELINE_TRAY_SCRIPT = os.path.join(
     "system_tray_pipeline.py",
 )
 
-
-class GUI:
 class GUI(GUIDrawer):
     def __init__(self):
         self.app = tk.Tk()
@@ -35,6 +33,7 @@ class GUI(GUIDrawer):
         # config browser
         config_types = [
             ("CFG files", "*.cfg"),
+            ("All files", "*.*")
         ]
         self.config_path = os.path.abspath("../config/default.cfg")
         self.browse_file(config_types, "config_path", "Config File Selection")
@@ -42,6 +41,7 @@ class GUI(GUIDrawer):
         # environment browser
         env_types = [
             ("Environment files", "*.hdr, *.exr"),
+            ("All files", "*.*")
         ]
         self.env_path = None
         self.browse_file(env_types, "env_path", "Environment Selection")
@@ -52,7 +52,7 @@ class GUI(GUIDrawer):
         self.start_button = tk.Button(
             bottom_frame,
             text="Start pipeline",
-            command=self.start_task,
+            command=self.start_pipeline_subprocess,
             font=("Arial", 14, "bold"),
             padx=20,
             pady=10
@@ -61,19 +61,8 @@ class GUI(GUIDrawer):
         self.validate_able_start()
 
         self.pipeline_process = None
-        self.start_button_group()
 
         self.app.mainloop()
-
-    def start_button_group(self):
-        group = self.input_group("Pipeline Control", width_percent=50, height_percent=20)
-
-        self.start_button = tk.Button(
-            group,
-            text="Start pipeline",
-            command=self.start_pipeline_subprocess
-        )
-        self.start_button.pack(anchor="w", padx=10, pady=10)
 
     def start_pipeline_subprocess(self):
         if self.pipeline_process is not None and self.pipeline_process.poll() is None:
@@ -110,6 +99,3 @@ class GUI(GUIDrawer):
         self.start_button.config(state=is_valid)
 
         self.app.after(200, self.validate_able_start)
-
-    def start_task(self):
-        pass
