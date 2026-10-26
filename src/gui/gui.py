@@ -1,7 +1,18 @@
 import os
+import subprocess
+import sys
 import tkinter as tk
 from .gui_drawer import GUIDrawer
 
+PIPELINE_TRAY_SCRIPT = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    "..",
+    "pipeline",
+    "system_tray_pipeline.py",
+)
+
+
+class GUI:
 class GUI(GUIDrawer):
     def __init__(self):
         self.app = tk.Tk()
@@ -49,7 +60,29 @@ class GUI(GUIDrawer):
         self.start_button.pack(side=tk.RIGHT, padx=(0, 10))
         self.validate_able_start()
 
+        self.pipeline_process = None
+        self.start_button_group()
+
         self.app.mainloop()
+
+    def start_button_group(self):
+        group = self.input_group("Pipeline Control", width_percent=50, height_percent=20)
+
+        self.start_button = tk.Button(
+            group,
+            text="Start pipeline",
+            command=self.start_pipeline_subprocess
+        )
+        self.start_button.pack(anchor="w", padx=10, pady=10)
+
+    def start_pipeline_subprocess(self):
+        if self.pipeline_process is not None and self.pipeline_process.poll() is None:
+            return
+
+        self.pipeline_process = subprocess.Popen(
+            [sys.executable, os.path.abspath(PIPELINE_TRAY_SCRIPT)],
+            cwd=os.path.dirname(os.path.abspath(PIPELINE_TRAY_SCRIPT)),
+        )
 
     def center_window(self):
         self.app.update_idletasks()

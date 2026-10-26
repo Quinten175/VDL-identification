@@ -1,6 +1,9 @@
 black
 ruff
 pre-commit
+pystray
+pillow
 
 --extra-index-url https://pypi.nvidia.com
 isaacsim[all,extscache]==6.1.0.0
+pygobject
